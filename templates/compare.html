@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h3>{{ page.name }}: version {{ old.id }} vs version {{ new.id }}</h3>
+  <p><a href="{{ url_for('page_detail', page_id=page.id) }}">&larr; back to page</a></p>
+</div>
+
+<div class="card">
+  <h3>Text changes</h3>
+  {{ table | safe }}
+</div>
+
+<div class="card">
+  <h3>Screenshots</h3>
+  <small>Red areas on the third image are where pixels changed. (Screenshots show the top of the page only.)</small>
+  <div class="grid">
+    <div><b>Old</b><br><img src="{{ url_for('files', filename=old.screenshot) }}"></div>
+    <div><b>New</b><br><img src="{{ url_for('files', filename=new.screenshot) }}"></div>
+  </div>
+  {% if highlighted %}
+    <p><b>Highlighted differences</b><br><img src="{{ url_for('files', filename=highlighted) }}"></p>
+  {% endif %}
+</div>
+{% endblock %}

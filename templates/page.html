@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h3>{{ page.name }} <span class="badge {{ page.status }}">{{ page.status }}</span></h3>
+  <p><a href="{{ page.url }}" target="_blank">{{ page.url }}</a></p>
+  {% if page.last_error %}<p><b>Last problem:</b> {{ page.last_error }}</p>{% endif %}
+  <p>
+    Last checked: {{ page.last_checked | nice }} |
+    Last changed: {{ page.last_changed | nice }} |
+    Every {{ page.interval_minutes }} min |
+    Sensitivity: {{ page.sensitivity }}
+  </p>
+  <p>
+    Watching: <code>{{ page.watch_selector or "whole page" }}</code> |
+    Ignoring: <code>{{ page.ignore_selector or "nothing extra" }}</code>
+  </p>
+  <form method="post" action="{{ url_for('check_now', page_id=page.id) }}" style="display:inline">
+    <button type="submit">Check now</button>
+  </form>
+  <form method="post" action="{{ url_for('delete', page_id=page.id) }}" style="display:inline"
+        onsubmit="return confirm('Delete this page and all its versions?')">
+    <button type="submit">Delete</button>
+  </form>
+</div>
+
+{% if snapshots | length >= 2 %}
+<div class="card">
+  <h3>Compare two versions</h3>
+  <form method="get" action="{{ url_for('compare_form') }}">
+    Old:
+    <select name="a">
+      {% for s in snapshots %}
+        <option value="{{ s.id }}" {% if loop.index == 2 %}selected{% endif %}>Version {{ s.id }} - {{ s.created_at | nice }}</option>
+      {% endfor %}
+    </select>
+    New:
+    <select name="b">
+      {% for s in snapshots %}
+        <option value="{{ s.id }}" {% if loop.first %}selected{% endif %}>Version {{ s.id }} - {{ s.created_at | nice }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Compare</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3>Version timeline</h3>
+  {% if snapshots %}
+  <table>
+    <tr><th>Version</th><th>Saved at</th><th>Screenshot</th><th>Compare with previous</th></tr>
+    {% for s in snapshots %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td>{{ s.created_at | nice }}</td>
+      <td><a href="{{ url_for('files', filename=s.screenshot) }}" target="_blank">view</a></td>
+      <td>
+        {% if not loop.last %}
+          <a href="{{ url_for('compare', a=snapshots[loop.index0 + 1].id, b=s.id) }}">see what changed</a>
+        {% else %}first version{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p>No versions yet. The first check is probably still running, refresh in a few seconds.</p>
+  {% endif %}
+</div>
+{% endblock %}

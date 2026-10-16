@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h3>Watch a new page</h3>
+  <form method="post" action="{{ url_for('add') }}">
+    <label>Name</label>
+    <input type="text" name="name" placeholder="e.g. College notice board" required>
+    <label>URL (public pages only)</label>
+    <input type="url" name="url" placeholder="https://example.com" required>
+
+    <div class="grid">
+      <div>
+        <label>Check every</label><br>
+        <select name="interval">
+          {% for m in intervals %}
+            <option value="{{ m }}" {% if m == 60 %}selected{% endif %}>
+              {% if m < 60 %}{{ m }} minutes{% elif m == 60 %}1 hour{% else %}{{ m // 60 }} hours{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Sensitivity</label><br>
+        <select name="sensitivity">
+          <option value="low">Low - ignores numbers, dates, times</option>
+          <option value="medium" selected>Medium - ignores dates, times, tokens</option>
+          <option value="high">High - any text change counts</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label>Only watch this area (CSS selector, optional)</label>
+        <input type="text" name="watch_selector" placeholder="#main-content">
+      </div>
+      <div>
+        <label>Ignore these areas (CSS selectors, optional)</label>
+        <input type="text" name="ignore_selector" placeholder=".ad-box, #clock">
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label>Discord webhook URL (optional)</label>
+        <input type="text" name="discord_webhook">
+      </div>
+      <div>
+        <label>Email for alerts (optional)</label>
+        <input type="email" name="email">
+      </div>
+    </div>
+    <button type="submit">Start watching</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Dashboard</h3>
+  {% if pages %}
+  <table>
+    <tr><th>Name</th><th>Status</th><th>Last checked</th><th>Last changed</th><th>Every</th><th>Watchers</th><th></th></tr>
+    {% for p in pages %}
+    <tr>
+      <td><a href="{{ url_for('page_detail', page_id=p.id) }}">{{ p.name }}</a><br><small>{{ p.url }}</small></td>
+      <td><span class="badge {{ p.status }}">{{ p.status }}</span></td>
+      <td>{{ p.last_checked | nice }}</td>
+      <td>{{ p.last_changed | nice }}</td>
+      <td>{{ p.interval_minutes }} min</td>
+      <td>{{ p.watchers }}</td>
+      <td>
+        <form method="post" action="{{ url_for('check_now', page_id=p.id) }}" style="display:inline">
+          <button type="submit">Check now</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <small>Status: ok = fine, error = site down/timeout, blocked = CAPTCHA or blocked, noisy = changes on every check (alerts paused).</small>
+  {% else %}
+    <p>No pages yet. Add one above.</p>
+  {% endif %}
+</div>
+{% endblock %}
