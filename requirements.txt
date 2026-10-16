@@ -1,0 +1,5 @@
+flask
+apscheduler
+playwright
+requests
+pillow
